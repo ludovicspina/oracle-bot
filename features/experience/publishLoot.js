@@ -9,9 +9,9 @@ module.exports = {
             // Vérification des permissions d'administrateur
             const { PermissionsBitField } = require('discord.js');
 
-            if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-                return interaction.reply({ content: 'Seuls les administrateurs peuvent utiliser cette commande.', ephemeral: true });
-            }
+            // if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            //     return interaction.reply({ content: 'Seuls les administrateurs peuvent utiliser cette commande.', ephemeral: true });
+            // }
 
             // Informer l'utilisateur de fournir les pièces jointes après la commande
             await interaction.reply({
