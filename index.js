@@ -15,7 +15,8 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,  // Si vous voulez traiter le contenu des messages
-        GatewayIntentBits.GuildMembers  // Si vous avez besoin d'accéder aux membres
+        GatewayIntentBits.GuildMembers,  // Si vous avez besoin d'accéder aux membres
+        GatewayIntentBits.GuildVoiceStates,
     ],
 
 });
