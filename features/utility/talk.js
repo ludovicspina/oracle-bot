@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const { pipeline } = require('stream');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const prism = require('prism-media');
 
 module.exports = {
@@ -12,22 +11,24 @@ module.exports = {
                 .setName('source')
                 .setDescription('Salon vocal source.')
                 .setRequired(true)
-                .addChannelTypes(2)
+                .addChannelTypes(2) // Type 2 : salon vocal
         )
-        .addChannelOption(option =>
+        .addStringOption(option =>
             option
                 .setName('targets')
-                .setDescription('Salons vocaux cibles (séparés par des virgules).')
+                .setDescription('IDs des salons vocaux cibles, séparés par des virgules.')
                 .setRequired(true)
-                .addChannelTypes(2)
         ),
     async execute(interaction) {
         const sourceChannel = interaction.options.getChannel('source');
-        const targetChannels = interaction.options.getChannel('targets');
+        const targetChannelsString = interaction.options.getString('targets');
 
-        if (!sourceChannel || !targetChannels) {
-            return interaction.reply({ content: 'Veuillez spécifier des salons valides.', ephemeral: true });
+        if (!sourceChannel || !targetChannelsString) {
+            return interaction.reply({ content: 'Spécifiez un salon source et au moins un salon cible.', ephemeral: true });
         }
+
+        // Convertir la liste de salons cibles en tableau
+        const targetChannelIds = targetChannelsString.split(',').map(id => id.trim());
 
         try {
             // Connexion au salon source
@@ -40,22 +41,22 @@ module.exports = {
             const audioPlayer = createAudioPlayer();
 
             // Connexion aux salons cibles
-            const targetConnections = [];
-            for (const targetChannel of targetChannels) {
-                const targetConnection = joinVoiceChannel({
-                    channelId: targetChannel.id,
-                    guildId: targetChannel.guild.id,
-                    adapterCreator: targetChannel.guild.voiceAdapterCreator,
-                });
+            const targetConnections = targetChannelIds.map(channelId => {
+                const targetChannel = interaction.guild.channels.cache.get(channelId);
+                if (targetChannel && targetChannel.isVoice()) {
+                    return joinVoiceChannel({
+                        channelId: targetChannel.id,
+                        guildId: targetChannel.guild.id,
+                        adapterCreator: targetChannel.guild.voiceAdapterCreator,
+                    });
+                } else {
+                    interaction.followUp({ content: `Le salon ID ${channelId} est invalide ou n'est pas un salon vocal.`, ephemeral: true });
+                    return null;
+                }
+            }).filter(connection => connection !== null);
 
-                targetConnections.push(targetConnection);
-                targetConnection.subscribe(audioPlayer);
-            }
-
-            // Capturer l'audio du salon source
+            // Capturer et retransmettre l'audio du salon source
             const receiver = sourceConnection.receiver;
-            const userId = interaction.user.id;
-
             receiver.speaking.on('start', (userId) => {
                 const audioStream = receiver.subscribe(userId, {
                     end: {
@@ -69,11 +70,15 @@ module.exports = {
                     frameSize: 960,
                 });
 
-                const audioResource = createAudioResource(pipeline(audioStream, transcoder, () => {}));
+                const audioResource = createAudioResource(audioStream.pipe(transcoder));
                 audioPlayer.play(audioResource);
+
+                for (const targetConnection of targetConnections) {
+                    targetConnection.subscribe(audioPlayer);
+                }
             });
 
-            interaction.reply(`Retransmission en cours du salon **${sourceChannel.name}** vers ${targetChannels.map(ch => ch.name).join(', ')}`);
+            interaction.reply(`Retransmission du salon **${sourceChannel.name}** vers les salons : ${targetChannelIds.join(', ')}`);
         } catch (error) {
             console.error(error);
             interaction.reply({ content: 'Une erreur est survenue lors de la retransmission.', ephemeral: true });
