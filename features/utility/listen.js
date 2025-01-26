@@ -1,41 +1,35 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer } = require('@discordjs/voice');
+const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('listen')
-        .setDescription('Connecte le bot à un salon vocal.')
+        .setDescription('Connecte le bot à un salon vocal pour écouter.')
         .addChannelOption(option =>
-            option.setName('salon')
-                .setDescription('ID du salon vocal à connecter')
-                .setRequired(true)),
+            option
+                .setName('salon')
+                .setDescription('Le salon vocal à écouter.')
+                .setRequired(true)
+                .addChannelTypes(2) // Type 2 : salon vocal
+        ),
     async execute(interaction) {
         const voiceChannel = interaction.options.getChannel('salon');
-        if (!voiceChannel || voiceChannel.type !== 2) { // Vérifie si le salon est vocal
-            return interaction.reply({
-                content: 'Veuillez fournir un salon vocal valide.',
-                ephemeral: true,
-            });
+        if (!voiceChannel) {
+            return interaction.reply({ content: 'Salon vocal invalide.', ephemeral: true });
         }
 
         try {
+            // Connexion au salon vocal
             const connection = joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
             });
 
-            interaction.reply(`Connecté au salon vocal : **${voiceChannel.name}**`);
-
-            // Vous pouvez ajouter un lecteur audio ici si nécessaire
-            const player = createAudioPlayer();
-            connection.subscribe(player);
+            interaction.reply(`Bot connecté au salon vocal : **${voiceChannel.name}**`);
         } catch (error) {
             console.error(error);
-            interaction.reply({
-                content: 'Une erreur est survenue lors de la connexion au salon vocal.',
-                ephemeral: true,
-            });
+            interaction.reply({ content: 'Erreur lors de la connexion au salon vocal.', ephemeral: true });
         }
     },
 };
