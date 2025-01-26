@@ -4,7 +4,6 @@ const {
     createAudioPlayer,
     createAudioResource,
     VoiceReceiver,
-    AudioPlayerStatus,
     EndBehaviorType,
 } = require('@discordjs/voice');
 const prism = require('prism-media');
@@ -34,13 +33,13 @@ module.exports = {
         if (!sourceChannel || !targetChannel) {
             return interaction.reply({
                 content: 'Les salons source et cible doivent être spécifiés et valides.',
-                ephemeral: true,
+                flags: 64, // Réponse visible uniquement par l'utilisateur (équivalent de "ephemeral: true")
             });
         }
 
         await interaction.reply({
             content: `Le bot va retransmettre l'audio de **${sourceChannel.name}** vers **${targetChannel.name}**.`,
-            ephemeral: true,
+            flags: 64, // Réponse visible uniquement par l'utilisateur
         });
 
         try {
@@ -99,7 +98,7 @@ module.exports = {
             console.error('Une erreur est survenue :', error);
             interaction.followUp({
                 content: 'Une erreur est survenue lors de la configuration de la retransmission.',
-                ephemeral: true,
+                flags: 64, // Réponse visible uniquement par l'utilisateur
             });
         }
     },
