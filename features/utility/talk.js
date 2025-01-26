@@ -20,14 +20,17 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const sourceChannel = interaction.options.getChannel('source');
-        const targetChannelsString = interaction.options.getString('targets');
+        const sourceChannel = interaction.options.getChannel('source'); // Type: Channel
+        const targetChannelsString = interaction.options.getString('targets'); // Type: String
 
         if (!sourceChannel || !targetChannelsString) {
-            return interaction.reply({ content: 'Spécifiez un salon source et au moins un salon cible.', ephemeral: true });
+            return interaction.reply({
+                content: 'Veuillez spécifier un salon source et au moins un salon cible.',
+                ephemeral: true,
+            });
         }
 
-        // Convertir la liste de salons cibles en tableau
+        // Conversion des IDs cibles en tableau
         const targetChannelIds = targetChannelsString.split(',').map(id => id.trim());
 
         try {
@@ -41,27 +44,33 @@ module.exports = {
             const audioPlayer = createAudioPlayer();
 
             // Connexion aux salons cibles
-            const targetConnections = targetChannelIds.map(channelId => {
+            const targetConnections = [];
+            for (const channelId of targetChannelIds) {
                 const targetChannel = interaction.guild.channels.cache.get(channelId);
-                if (targetChannel && targetChannel.isVoice()) {
-                    return joinVoiceChannel({
-                        channelId: targetChannel.id,
-                        guildId: targetChannel.guild.id,
-                        adapterCreator: targetChannel.guild.voiceAdapterCreator,
+
+                if (!targetChannel || !targetChannel.isVoice()) {
+                    await interaction.followUp({
+                        content: `Le salon ID ${channelId} est invalide ou n'est pas un salon vocal.`,
+                        ephemeral: true,
                     });
-                } else {
-                    interaction.followUp({ content: `Le salon ID ${channelId} est invalide ou n'est pas un salon vocal.`, ephemeral: true });
-                    return null;
+                    continue;
                 }
-            }).filter(connection => connection !== null);
+
+                const targetConnection = joinVoiceChannel({
+                    channelId: targetChannel.id,
+                    guildId: targetChannel.guild.id,
+                    adapterCreator: targetChannel.guild.voiceAdapterCreator,
+                });
+
+                targetConnections.push(targetConnection);
+                targetConnection.subscribe(audioPlayer);
+            }
 
             // Capturer et retransmettre l'audio du salon source
             const receiver = sourceConnection.receiver;
             receiver.speaking.on('start', (userId) => {
                 const audioStream = receiver.subscribe(userId, {
-                    end: {
-                        behavior: "silence", // Arrêter après un moment de silence
-                    },
+                    end: { behavior: 'silence' },
                 });
 
                 const transcoder = new prism.opus.Decoder({
@@ -72,16 +81,15 @@ module.exports = {
 
                 const audioResource = createAudioResource(audioStream.pipe(transcoder));
                 audioPlayer.play(audioResource);
-
-                for (const targetConnection of targetConnections) {
-                    targetConnection.subscribe(audioPlayer);
-                }
             });
 
-            interaction.reply(`Retransmission du salon **${sourceChannel.name}** vers les salons : ${targetChannelIds.join(', ')}`);
+            interaction.reply(`Retransmission de **${sourceChannel.name}** vers les salons : ${targetChannelIds.join(', ')}`);
         } catch (error) {
             console.error(error);
-            interaction.reply({ content: 'Une erreur est survenue lors de la retransmission.', ephemeral: true });
+            interaction.reply({
+                content: 'Une erreur est survenue lors de la retransmission.',
+                ephemeral: true,
+            });
         }
     },
 };
