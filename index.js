@@ -2,10 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Client, Events, GatewayIntentBits, Collection, AttachmentBuilder} = require('discord.js');
 const sequelize = require('./database/database');
-const User = require('./database/models/User');
 const foldersPath = path.join(__dirname, 'features');
 const commandFolders = fs.readdirSync(foldersPath);
-const Guild = require('./database/models/Guild');
 
 require("dotenv").config();
 
