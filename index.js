@@ -20,7 +20,6 @@ const client = new Client({
 });
 
 // Syncro DB
-const { Salary, Subscription } = require('./database/models/finance');
 sequelize.sync().then(() => {
     console.log('Base de données synchronisée');
 }).catch(err => {
