@@ -6,16 +6,6 @@ const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
 const client = new Mistral({ apiKey: MISTRAL_API_KEY });
 
-// Liste des mots-clés liés à la FAQ FWC pour filtrer les questions
-const FAQ_KEYWORDS = [
-    "serveur FWC", "Flyff World Championships", "inscription", "transfert personnage",
-    "nom personnage", "préenregistrement", "jeu", "taux spawn", "taux amélioration",
-    "niveau maximum", "hébergement", "avantages", "tournois", "règles JcJ",
-    "règles JcE", "échange équipement", "sets et armes", "transfert", "limites",
-    "objets transférables", "guildes", "garde-robe", "logement", "cartes percées",
-    "bonus d'armes", "titres", "serveur choisi", "processus transfert", "FWC", "fwc"
-];
-
 const FAQ_FWC = {
     "serveur_FWC": {
         "description": "FWC signifie Flyff World Championships. Les serveurs FWC permettent aux joueurs d'améliorer rapidement leurs personnages pour une compétition à venir."
@@ -83,12 +73,6 @@ const FAQ_FWC = {
         "conflit_noms": "Nom modifié avec un numéro aléatoire, parchemin de renommage offert.",
         "processus_transfert": "Durée non garantie, transfert séquentiel, détails à venir."
     }
-}
-
-
-// Fonction pour vérifier si la question est liée à la FAQ FWC
-function isRelatedToFAQ(question) {
-    return FAQ_KEYWORDS.some(keyword => question.toLowerCase().includes(keyword.toLowerCase()));
 }
 
 module.exports = {
