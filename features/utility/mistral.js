@@ -105,11 +105,6 @@ module.exports = {
 
         await interaction.deferReply(); // Permet au bot de prendre du temps pour répondre
 
-        if (!isRelatedToFAQ(question)) {
-            await interaction.editReply("Je ne sais pas. Pose une question en lien avec la FAQ FWC.");
-            return;
-        }
-
         try {
             const chatResponse = await client.chat.complete({
                 model: 'mistral-tiny', // Remplacez par le modèle approprié si nécessaire
