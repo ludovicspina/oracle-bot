@@ -13,7 +13,7 @@ const FAQ_KEYWORDS = [
     "niveau maximum", "hébergement", "avantages", "tournois", "règles JcJ",
     "règles JcE", "échange équipement", "sets et armes", "transfert", "limites",
     "objets transférables", "guildes", "garde-robe", "logement", "cartes percées",
-    "bonus d'armes", "titres", "serveur choisi", "processus transfert"
+    "bonus d'armes", "titres", "serveur choisi", "processus transfert", "FWC", "fwc"
 ];
 
 const FAQ_FWC = {
